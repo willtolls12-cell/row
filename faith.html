@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050506">
+  <title>Faith</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="sync.js" defer></script>
+  <script src="topbar.js" defer></script>
+  <style>
+    :root {
+      --bg: #0a0a0b; --bg-deep: #050506;
+      --text-primary: #FAFAFA; --text-secondary: #B8B6B0; --text-tertiary: #76746E;
+      --accent: #E07658; --accent-hi: #F08A6C;
+      --success: #6BE3A4; --danger: #FF8A8A;
+      --gold: #F2C063; --gold-bg: rgba(242,192,99,0.10); --gold-border: rgba(242,192,99,0.25);
+      --font: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+      --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      color-scheme: dark;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    .shell { max-width: 720px; margin: 0 auto; padding: 20px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left)); }
+
+    /* ===== Sub-tabs ===== */
+    .sub-tabs { display: flex; gap: 5px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 4px; margin-bottom: 22px; }
+    .sub-tab { flex: 1; padding: 9px 6px; border: none; border-radius: 8px; background: transparent; color: var(--text-tertiary); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap; }
+    .sub-tab.active { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+
+    /* ===== Sections ===== */
+    .faith-section { display: none; }
+    .faith-section.active { display: block; }
+
+    /* ===== Shared form styles ===== */
+    .f-label { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; margin-bottom: 8px; display: block; }
+    .f-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font: inherit; font-size: 13px; outline: none; }
+    .f-input:focus { border-color: var(--gold); }
+    .f-textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 11px 13px; color: var(--text-primary); font: inherit; font-size: 13.5px; resize: none; outline: none; line-height: 1.6; }
+    .f-textarea:focus { border-color: var(--gold); }
+    .f-form-card { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
+    .f-btn-gold { padding: 10px 18px; border-radius: 10px; background: var(--gold-bg); border: 1px solid var(--gold-border); color: var(--gold); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .f-btn-gold:hover { background: rgba(242,192,99,0.18); }
+    .f-btn-ghost { padding: 6px 12px; border-radius: 999px; background: transparent; border: 1px solid rgba(255,255,255,0.08); color: var(--text-tertiary); font: inherit; font-size: 11px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+    .f-btn-ghost:hover { color: var(--text-secondary); }
+    .f-empty { text-align: center; padding: 32px 20px; color: var(--text-tertiary); font-size: 13px; line-height: 1.6; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .section-head-label { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; }
+
+    /* ===== PRAYERS ===== */
+    .prayer-card { background: rgba(255,255,255,0.025); border: 1px solid transparent; border-radius: 14px; padding: 15px 16px; margin-bottom: 10px; }
+    .prayer-card.answered { border-color: rgba(107,227,164,0.15); }
+    .prayer-answered-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--success); font-weight: 600; margin-bottom: 8px; }
+    .prayer-text { font-size: 14px; color: var(--text-primary); line-height: 1.55; margin-bottom: 8px; }
+    .prayer-date { font-size: 10.5px; color: var(--text-tertiary); font-family: var(--font-mono); }
+    .prayer-actions { display: flex; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
+    .prayer-mark-btn { padding: 6px 12px; border-radius: 999px; background: rgba(107,227,164,0.08); border: 1px solid rgba(107,227,164,0.22); color: var(--success); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .prayer-mark-btn:hover { background: rgba(107,227,164,0.15); }
+    .prayer-del-btn { padding: 6px 10px; border-radius: 999px; background: transparent; border: 1px solid rgba(255,255,255,0.07); color: var(--text-tertiary); font: inherit; font-size: 11px; cursor: pointer; }
+    .prayer-del-btn:hover { color: var(--danger); border-color: rgba(255,107,107,0.25); }
+
+    /* ===== DEVOTIONAL ===== */
+    .dev-nav-row { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    .dev-nav-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 13px; color: var(--text-secondary); font: inherit; font-size: 14px; cursor: pointer; line-height: 1; }
+    .dev-nav-btn:hover { background: rgba(255,255,255,0.07); }
+    .dev-date-input { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; color: var(--text-primary); font: inherit; font-size: 13px; outline: none; cursor: pointer; }
+    .dev-date-input:focus { border-color: var(--gold); }
+    .dev-today-btn { background: transparent; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 13px; color: var(--text-tertiary); font: inherit; font-size: 12px; cursor: pointer; }
+    .dev-today-btn:hover { color: var(--text-secondary); }
+    .dev-save-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+    .dev-toast { font-size: 11.5px; color: var(--success); opacity: 0; transition: opacity 0.3s; }
+    .dev-toast.show { opacity: 1; }
+    .dev-entry-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 13px 15px; margin-bottom: 8px; cursor: pointer; transition: background 0.15s; }
+    .dev-entry-card:hover { background: rgba(255,255,255,0.04); }
+    .dev-entry-date { font-size: 10.5px; color: var(--gold); font-family: var(--font-mono); font-weight: 600; margin-bottom: 4px; }
+    .dev-entry-verse-ref { font-size: 11px; color: var(--text-tertiary); margin-bottom: 4px; }
+    .dev-entry-preview { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+    /* ===== VERSES ===== */
+    .verse-card { background: rgba(255,255,255,0.025); border-left: 3px solid var(--gold); border-radius: 0 12px 12px 0; padding: 15px 16px; margin-bottom: 10px; }
+    .verse-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .verse-ref { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 0.06em; text-transform: uppercase; }
+    .verse-text { font-size: 14px; color: var(--text-primary); line-height: 1.65; font-style: italic; }
+    .verse-del { background: transparent; border: none; color: var(--text-tertiary); font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; }
+    .verse-del:hover { color: var(--danger); }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" data-tab="prayers">🙏 Prayers</button>
+    <button class="sub-tab" data-tab="devotional">📖 Devotional</button>
+    <button class="sub-tab" data-tab="verses">⭐ Verses</button>
+  </div>
+
+  <!-- ===== PRAYERS ===== -->
+  <div class="faith-section active" data-section="prayers">
+    <div class="f-form-card">
+      <label class="f-label">New prayer request</label>
+      <textarea class="f-textarea" id="prayerInput" rows="3" placeholder="Write your prayer request…"></textarea>
+      <div style="margin-top:10px"><button class="f-btn-gold" id="prayerAddBtn" style="width:100%">+ Add to prayer list</button></div>
+    </div>
+    <div class="section-head">
+      <span class="section-head-label">Active <span id="activePrayerCount"></span></span>
+      <button class="f-btn-ghost" id="answeredToggle">Show answered</button>
+    </div>
+    <div id="prayersList"></div>
+  </div>
+
+  <!-- ===== DEVOTIONAL ===== -->
+  <div class="faith-section" data-section="devotional">
+    <div class="dev-nav-row">
+      <button class="dev-nav-btn" id="devPrev">‹</button>
+      <input type="date" class="dev-date-input" id="devDate">
+      <button class="dev-nav-btn" id="devNext">›</button>
+      <button class="dev-today-btn" id="devToday">Today</button>
+    </div>
+    <div class="f-form-card">
+      <label class="f-label">Verse</label>
+      <input type="text" class="f-input" id="devVerse" placeholder="e.g. John 3:16 — 'For God so loved the world…'" style="margin-bottom:12px">
+      <label class="f-label">Notes & Reflections</label>
+      <textarea class="f-textarea" id="devNotes" rows="6" placeholder="What is God showing you today?"></textarea>
+      <div class="dev-save-row">
+        <button class="f-btn-gold" id="devSave">Save entry</button>
+        <span class="dev-toast" id="devToast">Saved ✓</span>
+      </div>
+    </div>
+    <div class="section-head" style="margin-top:4px">
+      <span class="section-head-label">Past entries</span>
+    </div>
+    <div id="devHistory"></div>
+  </div>
+
+  <!-- ===== VERSES ===== -->
+  <div class="faith-section" data-section="verses">
+    <div class="f-form-card">
+      <label class="f-label">Reference</label>
+      <input type="text" class="f-input" id="verseRef" placeholder="e.g. Philippians 4:13" style="margin-bottom:10px">
+      <label class="f-label">Verse text</label>
+      <textarea class="f-textarea" id="verseText" rows="3" placeholder="Type or paste the verse…"></textarea>
+      <div style="margin-top:10px"><button class="f-btn-gold" id="verseSave" style="width:100%">⭐ Save verse</button></div>
+    </div>
+    <div id="versesList"></div>
+  </div>
+
+</div>
+<script>
+(function () {
+  'use strict';
+  function storeGet(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } }
+  function storeSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function todayStr() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  function fmtDate(s) {
+    if (!s) return '';
+    const [y,m,d] = s.split('-').map(Number);
+    return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1] + ' ' + d + ', ' + y;
+  }
+
+  // ===== TABS =====
+  const TAB_KEY = 'faith:active_tab';
+  document.querySelectorAll('.sub-tab').forEach(t => t.addEventListener('click', () => setTab(t.dataset.tab)));
+  function setTab(name) {
+    document.querySelectorAll('.sub-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.faith-section').forEach(s => s.classList.toggle('active', s.dataset.section === name));
+    storeSet(TAB_KEY, name);
+  }
+  const savedTab = storeGet(TAB_KEY);
+  if (savedTab && ['prayers','devotional','verses'].includes(savedTab)) setTab(savedTab);
+
+  // ===== PRAYERS =====
+  const PRAYERS_KEY = 'faith:prayers';
+  let showAnswered = false;
+  function loadPrayers() { return storeGet(PRAYERS_KEY) || []; }
+  function savePrayers(a) { storeSet(PRAYERS_KEY, a); }
+
+  function renderPrayers() {
+    const list = document.getElementById('prayersList');
+    const countEl = document.getElementById('activePrayerCount');
+    const toggleBtn = document.getElementById('answeredToggle');
+    if (!list) return;
+    const all = loadPrayers();
+    const active = all.filter(p => !p.answered);
+    const answered = all.filter(p => p.answered);
+    if (countEl) countEl.textContent = active.length ? '(' + active.length + ')' : '';
+    if (toggleBtn) toggleBtn.textContent = showAnswered ? 'Hide answered' : 'Show answered (' + answered.length + ')';
+    const items = showAnswered ? answered : active;
+    if (!items.length) {
+      list.innerHTML = '<div class="f-empty">' + (showAnswered ? 'No answered prayers yet.' : 'No active requests — add one above.') + '</div>';
+      return;
+    }
+    list.innerHTML = items.map(p =>
+      '<div class="prayer-card' + (p.answered ? ' answered' : '') + '">' +
+        (p.answered ? '<div class="prayer-answered-badge">✓ Answered ' + fmtDate(p.answeredDate) + '</div>' : '') +
+        '<div class="prayer-text">' + esc(p.text) + '</div>' +
+        '<div class="prayer-date">Added ' + fmtDate(p.date) + '</div>' +
+        '<div class="prayer-actions">' +
+          (!p.answered ? '<button class="prayer-mark-btn" data-id="' + p.id + '">✓ Mark answered</button>' : '') +
+          '<button class="prayer-del-btn" data-id="' + p.id + '">Delete</button>' +
+        '</div>' +
+      '</div>'
+    ).join('');
+    list.querySelectorAll('.prayer-mark-btn').forEach(btn => btn.addEventListener('click', () => {
+      const a = loadPrayers(); const idx = a.findIndex(p => p.id === btn.dataset.id);
+      if (idx >= 0) { a[idx].answered = true; a[idx].answeredDate = todayStr(); savePrayers(a); renderPrayers(); }
+    }));
+    list.querySelectorAll('.prayer-del-btn').forEach(btn => btn.addEventListener('click', () => {
+      if (!confirm('Delete this prayer?')) return;
+      savePrayers(loadPrayers().filter(p => p.id !== btn.dataset.id)); renderPrayers();
+    }));
+  }
+
+  document.getElementById('prayerAddBtn').addEventListener('click', () => {
+    const inp = document.getElementById('prayerInput');
+    const text = inp.value.trim(); if (!text) return;
+    const a = loadPrayers();
+    a.unshift({ id: 'pr_' + Date.now(), text, date: todayStr(), answered: false, answeredDate: null });
+    savePrayers(a); inp.value = ''; renderPrayers();
+  });
+  document.getElementById('answeredToggle').addEventListener('click', () => { showAnswered = !showAnswered; renderPrayers(); });
+  renderPrayers();
+
+  // ===== DEVOTIONAL =====
+  const DEV_KEY = 'faith:devotional';
+  let devDate = todayStr();
+  function loadDev() { return storeGet(DEV_KEY) || {}; }
+  function saveDev(d) { storeSet(DEV_KEY, d); }
+
+  function loadDevEntry(date) {
+    const data = loadDev(); const e = data[date] || {};
+    document.getElementById('devDate').value = date;
+    document.getElementById('devVerse').value = e.verse || '';
+    document.getElementById('devNotes').value = e.notes || '';
+  }
+  function renderDevHistory() {
+    const list = document.getElementById('devHistory'); if (!list) return;
+    const data = loadDev();
+    const entries = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0])).slice(0,30);
+    if (!entries.length) { list.innerHTML = '<div class="f-empty">No entries yet.</div>'; return; }
+    list.innerHTML = entries.map(([date, e]) =>
+      '<div class="dev-entry-card" data-date="' + date + '">' +
+        '<div class="dev-entry-date">' + fmtDate(date) + '</div>' +
+        (e.verse ? '<div class="dev-entry-verse-ref">' + esc(e.verse.slice(0,60)) + (e.verse.length > 60 ? '…' : '') + '</div>' : '') +
+        '<div class="dev-entry-preview">' + esc(e.notes || '') + '</div>' +
+      '</div>'
+    ).join('');
+    list.querySelectorAll('.dev-entry-card').forEach(c => c.addEventListener('click', () => {
+      devDate = c.dataset.date; loadDevEntry(devDate);
+    }));
+  }
+
+  function shiftDay(offset) {
+    const d = new Date(devDate + 'T12:00:00'); d.setDate(d.getDate() + offset);
+    const next = d.toISOString().slice(0,10);
+    if (offset > 0 && next > todayStr()) return;
+    devDate = next; loadDevEntry(devDate);
+  }
+
+  document.getElementById('devDate').addEventListener('change', e => { devDate = e.target.value; loadDevEntry(devDate); });
+  document.getElementById('devPrev').addEventListener('click', () => shiftDay(-1));
+  document.getElementById('devNext').addEventListener('click', () => shiftDay(1));
+  document.getElementById('devToday').addEventListener('click', () => { devDate = todayStr(); loadDevEntry(devDate); });
+  document.getElementById('devSave').addEventListener('click', () => {
+    const verse = document.getElementById('devVerse').value.trim();
+    const notes = document.getElementById('devNotes').value.trim();
+    if (!verse && !notes) return;
+    const data = loadDev(); data[devDate] = { verse, notes, savedAt: Date.now() }; saveDev(data);
+    renderDevHistory();
+    const toast = document.getElementById('devToast');
+    toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+  loadDevEntry(devDate); renderDevHistory();
+
+  // ===== VERSES =====
+  const VERSES_KEY = 'faith:verses';
+  function loadVerses() { return storeGet(VERSES_KEY) || []; }
+  function saveVerses(a) { storeSet(VERSES_KEY, a); }
+
+  function renderVerses() {
+    const list = document.getElementById('versesList'); if (!list) return;
+    const verses = loadVerses();
+    if (!verses.length) { list.innerHTML = '<div class="f-empty">No saved verses yet.<br>Add your first one above.</div>'; return; }
+    list.innerHTML = verses.map(v =>
+      '<div class="verse-card">' +
+        '<div class="verse-card-head">' +
+          '<div class="verse-ref">' + esc(v.reference) + '</div>' +
+          '<button class="verse-del" data-id="' + v.id + '">×</button>' +
+        '</div>' +
+        '<div class="verse-text">' + esc(v.text) + '</div>' +
+      '</div>'
+    ).join('');
+    list.querySelectorAll('.verse-del').forEach(btn => btn.addEventListener('click', () => {
+      saveVerses(loadVerses().filter(v => v.id !== btn.dataset.id)); renderVerses();
+    }));
+  }
+
+  document.getElementById('verseSave').addEventListener('click', () => {
+    const ref = document.getElementById('verseRef').value.trim();
+    const text = document.getElementById('verseText').value.trim();
+    if (!ref && !text) return;
+    const a = loadVerses();
+    a.unshift({ id: 'vs_' + Date.now(), reference: ref, text, savedAt: Date.now() });
+    saveVerses(a);
+    document.getElementById('verseRef').value = '';
+    document.getElementById('verseText').value = '';
+    renderVerses();
+  });
+  renderVerses();
+
+})();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof initCloudSync !== 'function') return;
+  initCloudSync({
+    appKey: 'faith',
+    syncedPrefixes: ['faith:'],
+    onApplied: function () { window.dispatchEvent(new Event('storage')); }
+  });
+});
+</script>
+</body>
+</html>

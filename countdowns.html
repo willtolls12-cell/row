@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050506">
+  <title>Countdowns</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="sync.js" defer></script>
+  <script src="topbar.js" defer></script>
+  <style>
+    :root {
+      --bg: #0a0a0b; --bg-deep: #050506;
+      --text-primary: #FAFAFA; --text-secondary: #B8B6B0; --text-tertiary: #76746E;
+      --accent: #E07658; --accent-hi: #F08A6C;
+      --success: #6BE3A4; --warning: #F2C063; --danger: #FF8A8A;
+      --font: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+      --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      color-scheme: dark;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    .shell { max-width: 720px; margin: 0 auto; padding: 20px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left)); }
+
+    /* ===== Category colors ===== */
+    .cat-vacation   { --cat: #7DD3FC; }
+    .cat-birthday   { --cat: #F9A8D4; }
+    .cat-holiday    { --cat: #FBBF24; }
+    .cat-milestone  { --cat: #6BE3A4; }
+    .cat-anniversary{ --cat: #FF8A8A; }
+    .cat-other      { --cat: #B8B6B0; }
+
+    /* ===== Add form ===== */
+    .add-btn-wrap { margin-bottom: 20px; }
+    .open-form-btn { width: 100%; padding: 13px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12); color: var(--text-tertiary); font: inherit; font-size: 13px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+    .open-form-btn:hover { color: var(--text-primary); border-color: rgba(255,255,255,0.25); }
+
+    .add-form { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 18px; margin-bottom: 20px; display: none; }
+    .add-form.open { display: block; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+    .f-label { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; margin-bottom: 6px; display: block; }
+    .f-input, .f-select { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font: inherit; font-size: 13px; outline: none; }
+    .f-input:focus, .f-select:focus { border-color: var(--accent); }
+    .f-select option { background: #1a1a1c; }
+    .form-row { margin-bottom: 12px; }
+    .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .toggle-row label { font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+    .toggle-check { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+    .form-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .form-actions button { flex: 1; padding: 11px; border-radius: 10px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-primary { background: rgba(224,118,88,0.18); border: 1px solid rgba(224,118,88,0.40); color: var(--accent-hi); }
+    .btn-secondary { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-secondary); }
+
+    /* ===== Filter tabs ===== */
+    .filter-row { display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-btn { flex: 0 0 auto; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); color: var(--text-tertiary); font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+    .filter-btn.active { background: rgba(255,255,255,0.10); color: var(--text-primary); border-color: rgba(255,255,255,0.15); }
+
+    /* ===== Countdown cards ===== */
+    .countdown-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 480px) { .countdown-grid { grid-template-columns: 1fr; } }
+
+    .cd-card { background: rgba(255,255,255,0.025); border: 1px solid transparent; border-radius: 16px; padding: 16px; position: relative; transition: background 0.15s; }
+    .cd-card.urgent { border-color: rgba(255,138,138,0.25); background: rgba(255,107,107,0.04); }
+    .cd-card.today { border-color: rgba(107,227,164,0.35); background: rgba(107,227,164,0.05); }
+    .cd-emoji { font-size: 24px; margin-bottom: 8px; line-height: 1; }
+    .cd-name { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; line-height: 1.3; }
+    .cd-sub { font-size: 11px; color: var(--text-tertiary); margin-bottom: 12px; }
+    .cd-days { font-size: 36px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1; }
+    .cd-days-label { font-size: 10px; color: var(--text-tertiary); font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; margin-top: 3px; }
+    .cd-hm { font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); margin-top: 4px; }
+    .cd-cat-badge { display: inline-block; font-size: 9px; padding: 2px 7px; border-radius: 999px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 10px; background: rgba(255,255,255,0.06); color: var(--cat, var(--text-tertiary)); border: 1px solid rgba(255,255,255,0.08); }
+    .cd-card-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .cd-del-btn { background: transparent; border: 1px solid rgba(255,255,255,0.07); color: var(--text-tertiary); padding: 5px 9px; border-radius: 6px; font: inherit; font-size: 10px; cursor: pointer; }
+    .cd-del-btn:hover { color: var(--danger); border-color: rgba(255,107,107,0.25); }
+    .cd-done-btn { background: rgba(107,227,164,0.08); border: 1px solid rgba(107,227,164,0.20); color: var(--success); padding: 5px 9px; border-radius: 6px; font: inherit; font-size: 10px; cursor: pointer; }
+    .cd-urgent-dot { position: absolute; top: 12px; right: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 8px rgba(255,107,107,0.65); animation: urgentPulse 1.6s ease-in-out infinite; }
+    @keyframes urgentPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .cd-today-badge { position: absolute; top: 12px; right: 12px; font-size: 9px; font-weight: 800; color: var(--success); letter-spacing: 0.12em; text-transform: uppercase; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-tertiary); font-size: 13px; line-height: 1.7; }
+
+    /* ===== Archive ===== */
+    .archive-toggle { display: flex; justify-content: center; margin-top: 24px; }
+    .archive-toggle-btn { background: transparent; border: 1px solid rgba(255,255,255,0.08); color: var(--text-tertiary); padding: 8px 18px; border-radius: 999px; font: inherit; font-size: 11.5px; cursor: pointer; }
+    .archive-toggle-btn:hover { color: var(--text-secondary); }
+    .archive-section { margin-top: 20px; }
+    .archive-label { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; margin-bottom: 12px; }
+    .archive-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; background: rgba(255,255,255,0.02); border-radius: 10px; margin-bottom: 6px; opacity: 0.6; }
+    .archive-row-name { font-size: 13px; color: var(--text-secondary); }
+    .archive-row-date { font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); }
+
+    /* ===== Holidays toggle ===== */
+    .holidays-btn { width: 100%; padding: 10px; border-radius: 10px; background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.20); color: #FBBF24; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 16px; }
+    .holidays-btn:hover { background: rgba(251,191,36,0.10); }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Add form -->
+  <div class="add-btn-wrap">
+    <button class="open-form-btn" id="openFormBtn">＋ Add countdown</button>
+  </div>
+  <div class="add-form" id="addForm">
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="f-label">Event name</label>
+        <input type="text" class="f-input" id="evtName" placeholder="e.g. Beach vacation">
+      </div>
+      <div class="form-row">
+        <label class="f-label">Emoji / icon</label>
+        <input type="text" class="f-input" id="evtEmoji" placeholder="🏖️" maxlength="4">
+      </div>
+      <div class="form-row">
+        <label class="f-label">Date</label>
+        <input type="date" class="f-input" id="evtDate">
+      </div>
+      <div class="form-row">
+        <label class="f-label">Category</label>
+        <select class="f-select" id="evtCategory">
+          <option value="vacation">🏖️ Vacation</option>
+          <option value="birthday">🎂 Birthday</option>
+          <option value="holiday">🎉 Holiday</option>
+          <option value="milestone">🏆 Personal Milestone</option>
+          <option value="anniversary">❤️ Anniversary</option>
+          <option value="other">📌 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <input type="checkbox" class="toggle-check" id="evtRecurring">
+      <label for="evtRecurring">Recurring yearly (birthdays, anniversaries, holidays)</label>
+    </div>
+    <div id="birthYearRow" style="display:none; margin-bottom:12px">
+      <label class="f-label">Birth year (optional — shows "turns X")</label>
+      <input type="number" class="f-input" id="evtBirthYear" placeholder="e.g. 1990" min="1900" max="2024">
+    </div>
+    <div class="form-actions">
+      <button class="btn-primary" id="evtSaveBtn">Add countdown</button>
+      <button class="btn-secondary" id="evtCancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Holidays quick-add -->
+  <button class="holidays-btn" id="holidaysBtn">🇺🇸 Add US Holidays</button>
+
+  <!-- Filter tabs -->
+  <div class="filter-row" id="filterRow">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="vacation">🏖️ Vacation</button>
+    <button class="filter-btn" data-filter="birthday">🎂 Birthday</button>
+    <button class="filter-btn" data-filter="holiday">🎉 Holiday</button>
+    <button class="filter-btn" data-filter="milestone">🏆 Milestone</button>
+    <button class="filter-btn" data-filter="anniversary">❤️ Anniversary</button>
+    <button class="filter-btn" data-filter="other">📌 Other</button>
+  </div>
+
+  <!-- Countdown grid -->
+  <div class="countdown-grid" id="countdownGrid"></div>
+  <div id="emptyState" class="empty-state" style="display:none">
+    No countdowns yet.<br>Add an event or tap "Add US Holidays" to get started.
+  </div>
+
+  <!-- Archive -->
+  <div class="archive-toggle" id="archiveToggleWrap" style="display:none">
+    <button class="archive-toggle-btn" id="archiveToggleBtn">Show completed</button>
+  </div>
+  <div class="archive-section" id="archiveSection" style="display:none">
+    <div class="archive-label">Completed events</div>
+    <div id="archiveList"></div>
+  </div>
+
+</div>
+<script>
+(function () {
+  'use strict';
+  const KEY = 'countdowns:events';
+  function storeGet(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } }
+  function storeSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function loadEvents() { return storeGet(KEY) || []; }
+  function saveEvents(a) { storeSet(KEY, a); }
+
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function fmtDateStr(s) {
+    if (!s) return '';
+    const [y,m,d] = s.split('-').map(Number);
+    return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1] + ' ' + d + ', ' + y;
+  }
+
+  // ===== Date calculations =====
+  function getTargetDate(evt) {
+    if (!evt.recurring) return new Date(evt.date + 'T12:00:00');
+    const [, mo, da] = evt.date.split('-').map(Number);
+    const today = new Date(); today.setHours(0,0,0,0);
+    let year = today.getFullYear();
+    let target = new Date(year, mo - 1, da);
+    if (target < today) target = new Date(year + 1, mo - 1, da);
+    return target;
+  }
+  function getTimeRemaining(evt) {
+    const target = getTargetDate(evt);
+    const now = new Date();
+    const diff = target - now;
+    if (diff < 0) return { days: 0, hours: 0, minutes: 0, passed: true };
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    return { days, hours, minutes, passed: false };
+  }
+  function isToday(evt) {
+    const t = getTargetDate(evt);
+    const now = new Date();
+    return t.getFullYear() === now.getFullYear() && t.getMonth() === now.getMonth() && t.getDate() === now.getDate();
+  }
+  function getAge(evt) {
+    if (evt.category !== 'birthday' || !evt.birthYear) return null;
+    return getTargetDate(evt).getFullYear() - evt.birthYear;
+  }
+
+  // ===== Holidays =====
+  function easter(year) {
+    const a = year % 19, b = Math.floor(year/100), c = year % 100;
+    const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+    const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
+    const i = Math.floor(c/4), k = c % 4, l = (32+2*e+2*i-h-k) % 7;
+    const m = Math.floor((a+11*h+22*l)/451);
+    const month = Math.floor((h+l-7*m+114)/31);
+    const day = ((h+l-7*m+114) % 31) + 1;
+    return { month, day };
+  }
+  function nthWeekday(year, month, weekday, n) {
+    let d = new Date(year, month - 1, 1);
+    while (d.getDay() !== weekday) d.setDate(d.getDate() + 1);
+    d.setDate(d.getDate() + (n - 1) * 7);
+    return { month, day: d.getDate() };
+  }
+  function lastWeekday(year, month, weekday) {
+    let d = new Date(year, month, 0);
+    while (d.getDay() !== weekday) d.setDate(d.getDate() - 1);
+    return { month, day: d.getDate() };
+  }
+
+  function buildHolidays() {
+    const year = new Date().getFullYear();
+    const e = easter(year);
+    const memorial = lastWeekday(year, 5, 1);
+    const labor = nthWeekday(year, 9, 1, 1);
+    const thanksgiving = nthWeekday(year, 11, 4, 4);
+    return [
+      { name: "New Year's Day",    emoji: '🎆', month: 1,  day: 1 },
+      { name: "Valentine's Day",   emoji: '❤️', month: 2,  day: 14 },
+      { name: "St. Patrick's Day", emoji: '☘️', month: 3,  day: 17 },
+      { name: 'Easter',            emoji: '✝️', month: e.month, day: e.day },
+      { name: 'Memorial Day',      emoji: '🇺🇸', month: memorial.month, day: memorial.day },
+      { name: 'Independence Day',  emoji: '🎇', month: 7,  day: 4 },
+      { name: 'Labor Day',         emoji: '🇺🇸', month: labor.month, day: labor.day },
+      { name: 'Halloween',         emoji: '🎃', month: 10, day: 31 },
+      { name: 'Thanksgiving',      emoji: '🦃', month: thanksgiving.month, day: thanksgiving.day },
+      { name: 'Christmas',         emoji: '🎄', month: 12, day: 25 },
+      { name: "New Year's Eve",    emoji: '🥂', month: 12, day: 31 },
+    ].map(h => ({
+      id: 'hol_' + h.name.replace(/\W/g,'_'),
+      name: h.name, emoji: h.emoji,
+      date: year + '-' + String(h.month).padStart(2,'0') + '-' + String(h.day).padStart(2,'0'),
+      category: 'holiday', recurring: true, isHoliday: true, completed: false, completedAt: null, birthYear: null,
+    }));
+  }
+
+  // ===== Rendering =====
+  let currentFilter = 'all';
+  let showArchive = false;
+  const CAT_CLASS = { vacation:'cat-vacation', birthday:'cat-birthday', holiday:'cat-holiday', milestone:'cat-milestone', anniversary:'cat-anniversary', other:'cat-other' };
+  const CAT_LABEL = { vacation:'Vacation', birthday:'Birthday', holiday:'Holiday', milestone:'Milestone', anniversary:'Anniversary', other:'Other' };
+
+  function render() {
+    const grid = document.getElementById('countdownGrid');
+    const empty = document.getElementById('emptyState');
+    const archiveWrap = document.getElementById('archiveToggleWrap');
+    const archiveList = document.getElementById('archiveList');
+    const archiveSection = document.getElementById('archiveSection');
+    if (!grid) return;
+
+    let events = loadEvents().filter(e => !e.completed);
+    const archived = loadEvents().filter(e => e.completed);
+
+    // Sort: soonest first
+    events.sort((a, b) => {
+      const ta = getTargetDate(a), tb = getTargetDate(b);
+      return ta - tb;
+    });
+
+    // Filter
+    const filtered = currentFilter === 'all' ? events : events.filter(e => e.category === currentFilter);
+
+    if (!filtered.length) {
+      grid.innerHTML = '';
+      empty.style.display = '';
+    } else {
+      empty.style.display = 'none';
+      grid.innerHTML = filtered.map(evt => {
+        const t = getTimeRemaining(evt);
+        const today = isToday(evt);
+        const urgent = !today && t.days <= 7 && !t.passed;
+        const age = getAge(evt);
+        const catCls = CAT_CLASS[evt.category] || 'cat-other';
+        const sub = age ? 'Turns ' + age : (evt.recurring ? 'Recurring yearly' : fmtDateStr(evt.date));
+        return '<div class="cd-card ' + catCls + (urgent ? ' urgent' : '') + (today ? ' today' : '') + '" data-id="' + evt.id + '">' +
+          (urgent ? '<div class="cd-urgent-dot"></div>' : '') +
+          (today ? '<div class="cd-today-badge">TODAY!</div>' : '') +
+          '<div class="cd-emoji">' + (evt.emoji || '📅') + '</div>' +
+          '<div class="cd-name">' + esc(evt.name) + '</div>' +
+          '<div class="cd-sub">' + esc(sub) + '</div>' +
+          (today
+            ? '<div class="cd-days" style="color:var(--success)">🎉</div><div class="cd-days-label">Today!</div>'
+            : '<div class="cd-days">' + t.days + '</div><div class="cd-days-label">days away</div>' +
+              (t.days <= 3 ? '<div class="cd-hm">' + t.hours + 'h ' + t.minutes + 'm</div>' : '')
+          ) +
+          '<div class="cd-cat-badge">' + (CAT_LABEL[evt.category] || 'Other') + '</div>' +
+          '<div class="cd-card-actions">' +
+            '<button class="cd-del-btn" data-id="' + evt.id + '">Delete</button>' +
+            '<button class="cd-done-btn" data-id="' + evt.id + '">✓ Done</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      grid.querySelectorAll('.cd-del-btn').forEach(btn => btn.addEventListener('click', () => {
+        if (!confirm('Delete this countdown?')) return;
+        saveEvents(loadEvents().filter(e => e.id !== btn.dataset.id)); render();
+      }));
+      grid.querySelectorAll('.cd-done-btn').forEach(btn => btn.addEventListener('click', () => {
+        const evts = loadEvents(); const idx = evts.findIndex(e => e.id === btn.dataset.id);
+        if (idx >= 0) { evts[idx].completed = true; evts[idx].completedAt = todayStr(); saveEvents(evts); render(); }
+      }));
+    }
+
+    // Archive
+    if (archived.length) {
+      archiveWrap.style.display = '';
+      if (showArchive) {
+        archiveSection.style.display = '';
+        archiveList.innerHTML = archived.map(e =>
+          '<div class="archive-row">' +
+            '<span class="archive-row-name">' + (e.emoji||'📅') + ' ' + esc(e.name) + '</span>' +
+            '<span class="archive-row-date">' + fmtDateStr(e.completedAt || e.date) + '</span>' +
+          '</div>'
+        ).join('');
+      } else {
+        archiveSection.style.display = 'none';
+      }
+    } else {
+      archiveWrap.style.display = 'none';
+      archiveSection.style.display = 'none';
+    }
+  }
+
+  // ===== Filters =====
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.addEventListener('click', () => {
+    currentFilter = btn.dataset.filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+    render();
+  }));
+
+  // ===== Add form =====
+  const openBtn = document.getElementById('openFormBtn');
+  const form = document.getElementById('addForm');
+  const recurringCheck = document.getElementById('evtRecurring');
+  const birthYearRow = document.getElementById('birthYearRow');
+
+  openBtn.addEventListener('click', () => { form.classList.toggle('open'); openBtn.style.display = form.classList.contains('open') ? 'none' : ''; });
+  document.getElementById('evtCancelBtn').addEventListener('click', () => { form.classList.remove('open'); openBtn.style.display = ''; });
+  recurringCheck.addEventListener('change', () => { birthYearRow.style.display = recurringCheck.checked ? '' : 'none'; });
+
+  document.getElementById('evtSaveBtn').addEventListener('click', () => {
+    const name = document.getElementById('evtName').value.trim();
+    const date = document.getElementById('evtDate').value;
+    if (!name || !date) { alert('Please enter a name and date.'); return; }
+    const evts = loadEvents();
+    evts.push({
+      id: 'evt_' + Date.now(),
+      name,
+      emoji: document.getElementById('evtEmoji').value.trim() || '📅',
+      date,
+      category: document.getElementById('evtCategory').value,
+      recurring: recurringCheck.checked,
+      birthYear: recurringCheck.checked ? (parseInt(document.getElementById('evtBirthYear').value) || null) : null,
+      isHoliday: false, completed: false, completedAt: null,
+    });
+    saveEvents(evts);
+    // Reset form
+    document.getElementById('evtName').value = '';
+    document.getElementById('evtDate').value = '';
+    document.getElementById('evtEmoji').value = '';
+    document.getElementById('evtCategory').value = 'vacation';
+    recurringCheck.checked = false; birthYearRow.style.display = 'none';
+    form.classList.remove('open'); openBtn.style.display = '';
+    render();
+  });
+
+  // ===== Holidays =====
+  document.getElementById('holidaysBtn').addEventListener('click', () => {
+    const holidays = buildHolidays();
+    const evts = loadEvents();
+    const existingIds = new Set(evts.map(e => e.id));
+    let added = 0;
+    holidays.forEach(h => { if (!existingIds.has(h.id)) { evts.push(h); added++; } });
+    if (!added) { alert('US Holidays already added!'); return; }
+    saveEvents(evts); render();
+  });
+
+  // ===== Archive toggle =====
+  document.getElementById('archiveToggleBtn').addEventListener('click', () => {
+    showArchive = !showArchive;
+    document.getElementById('archiveToggleBtn').textContent = showArchive ? 'Hide completed' : 'Show completed';
+    render();
+  });
+
+  // ===== Live timer update every minute =====
+  render();
+  setInterval(render, 60000);
+
+})();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof initCloudSync !== 'function') return;
+  initCloudSync({
+    appKey: 'countdowns',
+    syncedKeys: ['countdowns:events'],
+    onApplied: function () { window.dispatchEvent(new Event('storage')); }
+  });
+});
+</script>
+</body>
+</html>

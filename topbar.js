@@ -84,14 +84,17 @@
 }
 .bottombar {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
-  display: flex; justify-content: space-around; align-items: stretch;
+  display: flex; justify-content: flex-start; align-items: stretch;
+  overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
   background: #0a0a0b;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
 }
+.bottombar::-webkit-scrollbar { display: none; }
 .bottombar-tab {
-  flex: 1;
+  flex: 0 0 auto; min-width: 68px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 3px; padding: 6px 0 4px; text-decoration: none;
   color: rgba(255, 255, 255, 0.45);
@@ -173,6 +176,12 @@ body.topbar-modal-open { overflow: hidden; touch-action: none; }
   <a href="gym.html" class="bottombar-tab" data-page="fitness">
     <span class="bottombar-tab-icon">💪</span><span>Fitness</span>
   </a>
+  <a href="faith.html" class="bottombar-tab" data-page="faith">
+    <span class="bottombar-tab-icon">✝️</span><span>Faith</span>
+  </a>
+  <a href="countdowns.html" class="bottombar-tab" data-page="countdowns">
+    <span class="bottombar-tab-icon">⏳</span><span>Countdowns</span>
+  </a>
 </nav>`;
 
   function isFinancePage() {
@@ -187,6 +196,8 @@ body.topbar-modal-open { overflow: hidden; touch-action: none; }
     const p = (window.location.pathname || '').toLowerCase();
     if (p.endsWith('health.html')) return 'health';
     if (p.endsWith('gym.html')) return 'fitness';
+    if (p.endsWith('faith.html')) return 'faith';
+    if (p.endsWith('countdowns.html')) return 'countdowns';
     return 'main';
   }
 
