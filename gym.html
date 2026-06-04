@@ -31,23 +31,26 @@ const CONFIG = {
   // Training split. Most people use Push/Pull/Legs but you can rename
   // these to "Upper", "Lower", "Full Body", "Day A", anything.
   days: [
-    { id: "push", name: "Push" },
-    { id: "pull", name: "Pull" },
-    { id: "legs", name: "Legs" }
+    { id: "pushA", name: "Push A" },
+    { id: "pullA", name: "Pull A" },
+    { id: "legsA", name: "Legs A" },
+    { id: "pushB", name: "Push B" },
+    { id: "pullB", name: "Pull B" },
+    { id: "legsB", name: "Legs B" }
   ],
 
   // Split rotation — the order your training days cycle through. Use day
   // ids from `days` above, plus "rest" for off-days. The pill at the top
   // of the app reads this + splitAnchor to compute "what day is today".
-  splitRotation: ["push", "pull", "legs", "rest"],
+  splitRotation: ["pushA", "pullA", "legsA", "rest", "pushB", "pullB", "legsB", "rest"],
 
   // Anchor: pair a real calendar date with which split day fell on it.
   // The rotation advances from this point. Set `date` to a recent day
   // when you knew what split you were on, and `splitId` to that day.
   // Edit this if your split drifts.
   splitAnchor: {
-    date: "2026-05-12",
-    splitId: "rest"
+    date: "2026-06-03",
+    splitId: "pushA"
   },
 
   // Progression rule: hit this many reps on the top set → coach tells you
@@ -78,15 +81,30 @@ const CONFIG = {
   // First-run defaults. Once a user logs anything, they edit through
   // the in-app + / gear buttons; this block stays as the seed.
   defaultExercises: [
-    { name: "Bench press",     gym: "comm", day: "push", repMin: 5, repMax: 8,  step: 2.5, startWeight: 60 },
-    { name: "Overhead press",  gym: "comm", day: "push", repMin: 5, repMax: 8,  step: 2.5, startWeight: 35 },
-    { name: "Tricep pushdown", gym: "comm", day: "push", repMin: 8, repMax: 12, step: 2.5, startWeight: 25 },
-    { name: "Pull-ups",        gym: "both", day: "pull", repMin: 5, repMax: 10, step: 1,   startWeight: 0, bw: true },
-    { name: "Barbell row",     gym: "comm", day: "pull", repMin: 6, repMax: 10, step: 2.5, startWeight: 50 },
-    { name: "Bicep curl",      gym: "comm", day: "pull", repMin: 8, repMax: 12, step: 1.25,startWeight: 15 },
-    { name: "Back squat",      gym: "comm", day: "legs", repMin: 5, repMax: 8,  step: 5,   startWeight: 80 },
-    { name: "Romanian deadlift", gym: "comm", day: "legs", repMin: 6, repMax: 10, step: 5, startWeight: 60 },
-    { name: "Leg press",       gym: "comm", day: "legs", repMin: 8, repMax: 12, step: 5,   startWeight: 100 }
+    // Push A
+    { name: "Bench press",        gym: "comm", day: "pushA", repMin: 5, repMax: 8,  step: 2.5, startWeight: 135 },
+    { name: "Overhead press",     gym: "comm", day: "pushA", repMin: 5, repMax: 8,  step: 2.5, startWeight: 75 },
+    { name: "Tricep pushdown",    gym: "comm", day: "pushA", repMin: 8, repMax: 12, step: 2.5, startWeight: 50 },
+    // Pull A
+    { name: "Pull-ups",           gym: "both", day: "pullA", repMin: 5, repMax: 10, step: 1,   startWeight: 0, bw: true },
+    { name: "Barbell row",        gym: "comm", day: "pullA", repMin: 6, repMax: 10, step: 2.5, startWeight: 115 },
+    { name: "Bicep curl",         gym: "comm", day: "pullA", repMin: 8, repMax: 12, step: 2.5, startWeight: 30 },
+    // Legs A
+    { name: "Back squat",         gym: "comm", day: "legsA", repMin: 5, repMax: 8,  step: 5,   startWeight: 185 },
+    { name: "Romanian deadlift",  gym: "comm", day: "legsA", repMin: 6, repMax: 10, step: 5,   startWeight: 135 },
+    { name: "Leg press",          gym: "comm", day: "legsA", repMin: 8, repMax: 12, step: 10,  startWeight: 225 },
+    // Push B
+    { name: "Incline bench press",gym: "comm", day: "pushB", repMin: 6, repMax: 10, step: 2.5, startWeight: 115 },
+    { name: "Dumbbell shoulder press", gym: "comm", day: "pushB", repMin: 8, repMax: 12, step: 2.5, startWeight: 35 },
+    { name: "Lateral raise",      gym: "comm", day: "pushB", repMin: 10, repMax: 15, step: 2.5, startWeight: 15 },
+    // Pull B
+    { name: "Lat pulldown",       gym: "comm", day: "pullB", repMin: 6, repMax: 10, step: 2.5, startWeight: 100 },
+    { name: "Seated cable row",   gym: "comm", day: "pullB", repMin: 8, repMax: 12, step: 2.5, startWeight: 100 },
+    { name: "Hammer curl",        gym: "comm", day: "pullB", repMin: 8, repMax: 12, step: 2.5, startWeight: 30 },
+    // Legs B
+    { name: "Leg press",          gym: "comm", day: "legsB", repMin: 8, repMax: 12, step: 10,  startWeight: 225 },
+    { name: "Leg curl",           gym: "comm", day: "legsB", repMin: 8, repMax: 12, step: 5,   startWeight: 70 },
+    { name: "Calf raise",         gym: "comm", day: "legsB", repMin: 12, repMax: 15, step: 5,  startWeight: 100 }
   ]
 };
 </script>
