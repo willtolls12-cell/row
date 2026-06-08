@@ -14,6 +14,10 @@
   --text-primary: #FAFAFA;
   --text-secondary: #B8B6B0;
   --text-tertiary: #76746E;
+  --accent: #E07658;
+  --success: #6BE3A4;
+  --warning: #F2C063;
+  --danger: #FF6B6B;
   --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
@@ -60,8 +64,15 @@ body::after {
 
 .page { max-width: 1100px; margin: 0 auto; }
 
+/* ===== PAGE HEADER ===== */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
 .dash-title {
-  margin: 0 0 18px;
+  margin: 0;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -73,6 +84,21 @@ body::after {
 }
 @media (max-width: 480px) { .dash-title { font-size: 22px; } }
 
+.gear-btn {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  color: var(--text-tertiary);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.gear-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-secondary); border-color: rgba(255,255,255,0.15); }
+.gear-btn:active .gear-icon { transform: rotate(22deg); }
+.gear-icon { transition: transform 0.18s cubic-bezier(0.22,1,0.36,1); display: block; }
+
 /* ===== BENTO GRID ===== */
 .bento {
   display: grid;
@@ -81,7 +107,6 @@ body::after {
   gap: 14px;
   grid-auto-flow: dense;
 }
-
 .big  { grid-column: span 2; grid-row: span 2; }
 .wide { grid-column: span 2; }
 
@@ -100,113 +125,180 @@ body::after {
   text-decoration: none;
   color: var(--text-primary);
   overflow: hidden;
-  transition:
-    transform 0.20s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.20s,
-    background 0.20s,
-    box-shadow 0.20s;
-  box-shadow:
-    0 1px 0 0 rgba(255,255,255,0.05) inset,
-    0 8px 32px rgba(0,0,0,0.35);
+  transition: transform 0.20s cubic-bezier(0.22,1,0.36,1), border-color 0.20s, background 0.20s, box-shadow 0.20s;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.05) inset, 0 8px 32px rgba(0,0,0,0.35);
 }
-.tile:hover {
-  transform: translateY(-3px);
-  background: rgba(255,255,255,0.065);
-  box-shadow:
-    0 1px 0 0 rgba(255,255,255,0.07) inset,
-    0 18px 48px rgba(0,0,0,0.48);
-}
-
-/* Accent tint overlay + border glow on hover via outline trick */
+.tile:hover { transform: translateY(-3px); background: rgba(255,255,255,0.065); box-shadow: 0 1px 0 0 rgba(255,255,255,0.07) inset, 0 18px 48px rgba(0,0,0,0.48); }
 .tile::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
   background: radial-gradient(ellipse at 100% 0%, var(--accent), transparent 65%);
-  opacity: 0.07;
-  pointer-events: none;
-  transition: opacity 0.20s;
+  opacity: 0.07; pointer-events: none; transition: opacity 0.20s;
 }
 .tile:hover::before { opacity: 0.13; }
 .tile:hover { border-color: rgba(255,255,255,0.12); }
-
-/* Tile number */
-.tile-num {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: rgba(255,255,255,0.22);
-}
-
-/* Emoji */
-.tile-emoji {
-  position: absolute;
-  top: 16px; right: 18px;
-  font-size: 28px; line-height: 1;
-  filter: drop-shadow(0 0 10px var(--accent));
-  opacity: 0.88;
-  transition: transform 0.20s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.20s;
-}
+.tile-num { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: rgba(255,255,255,0.22); }
+.tile-emoji { position: absolute; top: 16px; right: 18px; font-size: 28px; line-height: 1; filter: drop-shadow(0 0 10px var(--accent)); opacity: 0.88; transition: transform 0.20s cubic-bezier(0.22,1,0.36,1), opacity 0.20s; }
 .tile:hover .tile-emoji { transform: scale(1.10); opacity: 1; }
 .big .tile-emoji { font-size: 42px; top: 20px; right: 20px; }
-
-/* Spacer */
 .tile-spacer { flex: 1; }
-
-/* Title */
-.tile-title {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  margin-bottom: 5px;
-  line-height: 1.2;
-}
+.tile-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 5px; line-height: 1.2; }
 .big .tile-title { font-size: 26px; margin-bottom: 8px; }
-
-/* Footer */
-.tile-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-.tile-sub {
-  font-size: 11px;
-  color: var(--text-tertiary);
-  font-weight: 500;
-  line-height: 1.4;
-  flex: 1;
-}
+.tile-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tile-sub { font-size: 11px; color: var(--text-tertiary); font-weight: 500; line-height: 1.4; flex: 1; }
 .big .tile-sub { font-size: 13px; }
-.tile-arrow {
-  font-size: 15px;
-  color: var(--accent);
-  font-weight: 700;
-  flex-shrink: 0;
-  transition: transform 0.20s cubic-bezier(0.22, 1, 0.36, 1);
-}
+.tile-arrow { font-size: 15px; color: var(--accent); font-weight: 700; flex-shrink: 0; transition: transform 0.20s cubic-bezier(0.22,1,0.36,1); }
 .tile:hover .tile-arrow { transform: translateX(5px); }
+
+/* ===== MODAL BACKDROP ===== */
+.modal-bg {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(5,5,6,0.80);
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-bg.show { display: flex; }
+
+/* ===== MODAL CARD ===== */
+.modal {
+  width: 100%; max-width: 520px;
+  max-height: 90vh;
+  background: rgba(18,18,20,0.96);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.65), 0 1px 0 rgba(255,255,255,0.06) inset;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 22px;
+}
+.modal-title {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.modal-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-tertiary); font-size: 18px; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.10); color: var(--text-primary); }
+
+/* ===== FORM FIELDS ===== */
+.f-row { margin-bottom: 16px; }
+.f-label {
+  display: block; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-tertiary); margin-bottom: 7px;
+}
+.f-input {
+  width: 100%; padding: 10px 13px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; color: var(--text-primary);
+  font: inherit; font-size: 14px; outline: none;
+  transition: border-color 0.15s;
+}
+.f-input:focus { border-color: rgba(255,255,255,0.25); }
+.f-input-row { display: flex; gap: 8px; align-items: center; }
+.f-input-row .f-input { flex: 1; }
+.f-input-small { width: 80px; flex-shrink: 0; }
+
+/* Segmented toggle */
+.seg {
+  display: inline-flex; border-radius: 8px; overflow: hidden;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.seg-btn {
+  padding: 8px 14px; border: none; background: transparent;
+  color: var(--text-tertiary); font: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap;
+}
+.seg-btn.active { background: rgba(255,255,255,0.12); color: var(--text-primary); }
+
+/* ft/in dual inputs */
+.dual-inputs { display: none; gap: 6px; }
+.dual-inputs.visible { display: flex; }
+.dual-inputs .f-input { width: 72px; flex-shrink: 0; }
+.dual-inputs span { color: var(--text-tertiary); font-size: 12px; align-self: center; }
+
+/* Divider */
+.modal-divider {
+  height: 1px; background: rgba(255,255,255,0.07);
+  margin: 22px 0;
+}
+
+/* Save button */
+.save-btn {
+  width: 100%; padding: 13px;
+  border: none; border-radius: 12px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E8E5DD 100%);
+  color: #0A0A0B; font: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 16px rgba(0,0,0,0.35);
+  transition: filter 0.15s, transform 0.1s;
+  margin-top: 20px;
+}
+.save-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.save-btn:active { transform: translateY(0); }
+.save-toast {
+  text-align: center; margin-top: 10px;
+  font-size: 12px; color: var(--success); font-weight: 600;
+  opacity: 0; transition: opacity 0.3s;
+}
+.save-toast.show { opacity: 1; }
+
+/* ===== WHOOP CARD ===== */
+.whoop-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.whoop-status {
+  display: flex; align-items: center; gap: 8px;
+}
+.whoop-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(255,255,255,0.20);
+}
+.whoop-dot.connected {
+  background: var(--success);
+  box-shadow: 0 0 8px rgba(107,227,164,0.6);
+  animation: wdot 1.8s ease-in-out infinite;
+}
+@keyframes wdot { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.whoop-status-text { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.whoop-sync-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 3px; font-family: var(--font-mono); }
+.whoop-action-btn {
+  padding: 8px 16px; border-radius: 8px; font: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s; white-space: nowrap;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10);
+  color: var(--text-secondary);
+}
+.whoop-action-btn:hover { background: rgba(255,255,255,0.10); }
+.whoop-action-btn.syncing { opacity: 0.6; pointer-events: none; }
+
+.whoop-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 14px; }
+.whoop-stat {
+  background: rgba(255,255,255,0.025); border-radius: 10px; padding: 12px 10px; text-align: center;
+}
+.whoop-stat-val { font-size: 22px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1; }
+.whoop-stat-label { font-size: 9.5px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; margin-top: 5px; }
+.whoop-err { font-size: 11.5px; color: var(--danger); margin-top: 10px; font-family: var(--font-mono); }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 720px) {
-  .bento {
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 148px;
-    gap: 10px;
-  }
+  .bento { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 148px; gap: 10px; }
   .big { grid-row: span 1; }
   .big .tile-title { font-size: 20px; }
   .big .tile-emoji { font-size: 32px; }
 }
 @media (max-width: 440px) {
-  .bento {
-    grid-template-columns: 1fr;
-    grid-auto-rows: 132px;
-    gap: 8px;
-  }
+  .bento { grid-template-columns: 1fr; grid-auto-rows: 132px; gap: 8px; }
   .wide, .big { grid-column: span 1; grid-row: span 1; }
   .big .tile-title { font-size: 18px; }
 }
@@ -215,11 +307,24 @@ body::after {
 <body>
 <div class="page">
 
-  <h1 class="dash-title">Dashboard</h1>
+  <div class="page-header">
+    <h1 class="dash-title">Dashboard</h1>
+    <button class="gear-btn" id="gearBtn" aria-label="Settings">
+      <svg class="gear-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33
+                 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33
+                 l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4
+                 h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9
+                 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33
+                 l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4
+                 h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
 
   <div class="bento">
-
-    <!-- ·01 Main — big -->
     <a href="main.html" class="tile big" style="--accent:#6BE3A4">
       <span class="tile-num">·01</span>
       <span class="tile-emoji">🏠</span>
@@ -230,8 +335,6 @@ body::after {
         <span class="tile-arrow">→</span>
       </div>
     </a>
-
-    <!-- ·02 Fitness — wide -->
     <a href="gym.html" class="tile wide" style="--accent:#7DD3FC">
       <span class="tile-num">·02</span>
       <span class="tile-emoji">💪</span>
@@ -242,8 +345,6 @@ body::after {
         <span class="tile-arrow">→</span>
       </div>
     </a>
-
-    <!-- ·03 Health — small -->
     <a href="health.html" class="tile" style="--accent:#A7F3D0">
       <span class="tile-num">·03</span>
       <span class="tile-emoji">💊</span>
@@ -254,8 +355,6 @@ body::after {
         <span class="tile-arrow">→</span>
       </div>
     </a>
-
-    <!-- ·04 Faith — small -->
     <a href="faith.html" class="tile" style="--accent:#F2C063">
       <span class="tile-num">·04</span>
       <span class="tile-emoji">✝️</span>
@@ -266,8 +365,6 @@ body::after {
         <span class="tile-arrow">→</span>
       </div>
     </a>
-
-    <!-- ·05 Water — small -->
     <a href="po-water.html" class="tile" style="--accent:#60A5FA">
       <span class="tile-num">·05</span>
       <span class="tile-emoji">💧</span>
@@ -278,8 +375,6 @@ body::after {
         <span class="tile-arrow">→</span>
       </div>
     </a>
-
-    <!-- ·06 Finance — wide -->
     <a href="finance.html" class="tile wide" style="--accent:#F2C063">
       <span class="tile-num">·06</span>
       <span class="tile-emoji">📊</span>
@@ -290,8 +385,382 @@ body::after {
         <span class="tile-arrow">→</span>
       </div>
     </a>
+  </div>
+</div>
+
+<!-- ===== SETTINGS MODAL ===== -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal" id="settingsModalInner">
+
+    <div class="modal-header">
+      <span class="modal-title">Your Data</span>
+      <button class="modal-close" id="settingsClose" aria-label="Close">×</button>
+    </div>
+
+    <!-- Height -->
+    <div class="f-row">
+      <label class="f-label">Height</label>
+      <div class="f-input-row">
+        <input class="f-input" id="heightCm" type="number" min="50" max="280" placeholder="175">
+        <div class="dual-inputs" id="heightFtIn">
+          <input class="f-input" id="heightFt" type="number" min="1" max="9" placeholder="5">
+          <span>ft</span>
+          <input class="f-input" id="heightIn" type="number" min="0" max="11" placeholder="9">
+          <span>in</span>
+        </div>
+        <div class="seg" id="heightUnitSeg">
+          <button class="seg-btn active" data-unit="cm">cm</button>
+          <button class="seg-btn" data-unit="ftin">ft/in</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weight -->
+    <div class="f-row">
+      <label class="f-label">Weight</label>
+      <div class="f-input-row">
+        <input class="f-input" id="weightVal" type="number" min="20" max="500" placeholder="175">
+        <div class="seg" id="weightUnitSeg">
+          <button class="seg-btn" data-unit="kg">kg</button>
+          <button class="seg-btn active" data-unit="lb">lb</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Age -->
+    <div class="f-row">
+      <label class="f-label">Age</label>
+      <input class="f-input" id="ageVal" type="number" min="1" max="120" placeholder="25">
+    </div>
+
+    <!-- Sex -->
+    <div class="f-row">
+      <label class="f-label">Sex</label>
+      <div class="seg" id="sexSeg">
+        <button class="seg-btn active" data-sex="m">Male</button>
+        <button class="seg-btn" data-sex="f">Female</button>
+      </div>
+    </div>
+
+    <!-- Active hours -->
+    <div class="f-row">
+      <label class="f-label">Active hours / week</label>
+      <input class="f-input" id="activeHrs" type="number" min="0" max="40" step="0.5" placeholder="5">
+    </div>
+
+    <button class="save-btn" id="settingsSave">Save</button>
+    <div class="save-toast" id="saveToast">Saved ✓</div>
+
+    <div class="modal-divider"></div>
+
+    <!-- WHOOP card -->
+    <div style="margin-bottom:6px">
+      <div class="whoop-row">
+        <div>
+          <div class="whoop-status">
+            <span class="whoop-dot" id="whoopDot"></span>
+            <span class="whoop-status-text" id="whoopStatusText">Not connected</span>
+          </div>
+          <div class="whoop-sync-meta" id="whoopSyncMeta"></div>
+        </div>
+        <button class="whoop-action-btn" id="whoopActionBtn">Connect on Health page</button>
+      </div>
+      <div class="whoop-stats" id="whoopStats" style="display:none">
+        <div class="whoop-stat">
+          <div class="whoop-stat-val" id="wsRecovery">—</div>
+          <div class="whoop-stat-label">Recovery</div>
+        </div>
+        <div class="whoop-stat">
+          <div class="whoop-stat-val" id="wsSleep">—</div>
+          <div class="whoop-stat-label">Sleep</div>
+        </div>
+        <div class="whoop-stat">
+          <div class="whoop-stat-val" id="wsRhr">—</div>
+          <div class="whoop-stat-label">Rest HR</div>
+        </div>
+      </div>
+      <div class="whoop-err" id="whoopErr" style="display:none"></div>
+    </div>
 
   </div>
 </div>
+
+<script>
+(function () {
+  'use strict';
+
+  const WATER_KEY  = 'po_water_v1';
+  const WHOOP_KEY  = 'whoop_tokens_v1';
+  const SYNC_KEY   = 'whoop_last_sync';
+
+  // ===== Helpers =====
+  function loadWater() {
+    try { return JSON.parse(localStorage.getItem(WATER_KEY)) || defaultWater(); }
+    catch { return defaultWater(); }
+  }
+  function defaultWater() {
+    return {
+      unit: 'bottle', bottleMl: 500, glassMl: 250, weightUnit: 'lb',
+      profile: { weightKg: 75, age: 25, sex: 'm', activityHrsPerWeek: 5, heightCm: 175, heightUnit: 'cm' },
+      caffeineMgPerDay: 200, substances: [], logs: {}
+    };
+  }
+  function loadTokens() { try { return JSON.parse(localStorage.getItem(WHOOP_KEY)); } catch { return null; } }
+  function saveTokens(t) { try { localStorage.setItem(WHOOP_KEY, JSON.stringify(t)); } catch {} }
+
+  // ===== Modal open / close =====
+  const modal    = document.getElementById('settingsModal');
+  const gearBtn  = document.getElementById('gearBtn');
+  const closeBtn = document.getElementById('settingsClose');
+
+  function openModal() { modal.classList.add('show'); populateForm(); autoSyncWhoop(); }
+  function closeModal() { modal.classList.remove('show'); }
+
+  gearBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('show')) closeModal(); });
+
+  // ===== Height unit toggle =====
+  let heightUnit = 'cm';
+  document.getElementById('heightUnitSeg').querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const newUnit = btn.dataset.unit;
+      if (newUnit === heightUnit) return;
+      // Convert displayed value
+      if (newUnit === 'ftin') {
+        const cm = parseFloat(document.getElementById('heightCm').value) || 0;
+        const totalIn = cm / 2.54;
+        document.getElementById('heightFt').value = Math.floor(totalIn / 12) || '';
+        document.getElementById('heightIn').value = Math.round(totalIn % 12) || '';
+      } else {
+        const ft = parseFloat(document.getElementById('heightFt').value) || 0;
+        const inch = parseFloat(document.getElementById('heightIn').value) || 0;
+        document.getElementById('heightCm').value = Math.round((ft * 12 + inch) * 2.54) || '';
+      }
+      heightUnit = newUnit;
+      document.getElementById('heightCm').style.display = newUnit === 'cm' ? '' : 'none';
+      document.getElementById('heightFtIn').classList.toggle('visible', newUnit === 'ftin');
+      document.getElementById('heightUnitSeg').querySelectorAll('.seg-btn')
+        .forEach(b => b.classList.toggle('active', b.dataset.unit === newUnit));
+    });
+  });
+
+  // ===== Weight unit toggle =====
+  let weightUnit = 'lb';
+  document.getElementById('weightUnitSeg').querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const newUnit = btn.dataset.unit;
+      if (newUnit === weightUnit) return;
+      const cur = parseFloat(document.getElementById('weightVal').value) || 0;
+      document.getElementById('weightVal').value =
+        newUnit === 'lb' ? Math.round(cur * 2.20462 * 10) / 10
+                         : Math.round(cur / 2.20462 * 10) / 10;
+      weightUnit = newUnit;
+      document.getElementById('weightUnitSeg').querySelectorAll('.seg-btn')
+        .forEach(b => b.classList.toggle('active', b.dataset.unit === newUnit));
+    });
+  });
+
+  // ===== Sex toggle =====
+  let sex = 'm';
+  document.getElementById('sexSeg').querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sex = btn.dataset.sex;
+      document.getElementById('sexSeg').querySelectorAll('.seg-btn')
+        .forEach(b => b.classList.toggle('active', b.dataset.sex === sex));
+    });
+  });
+
+  // ===== Populate form from stored data =====
+  function populateForm() {
+    const w = loadWater();
+    const p = w.profile || {};
+
+    // Weight
+    weightUnit = w.weightUnit || 'lb';
+    const kg = p.weightKg || 75;
+    document.getElementById('weightVal').value =
+      weightUnit === 'lb' ? Math.round(kg * 2.20462 * 10) / 10 : Math.round(kg * 10) / 10;
+    document.getElementById('weightUnitSeg').querySelectorAll('.seg-btn')
+      .forEach(b => b.classList.toggle('active', b.dataset.unit === weightUnit));
+
+    // Height
+    heightUnit = p.heightUnit || 'cm';
+    const hcm = p.heightCm || 175;
+    if (heightUnit === 'cm') {
+      document.getElementById('heightCm').value = Math.round(hcm);
+      document.getElementById('heightCm').style.display = '';
+      document.getElementById('heightFtIn').classList.remove('visible');
+    } else {
+      const totalIn = hcm / 2.54;
+      document.getElementById('heightFt').value = Math.floor(totalIn / 12);
+      document.getElementById('heightIn').value = Math.round(totalIn % 12);
+      document.getElementById('heightCm').style.display = 'none';
+      document.getElementById('heightFtIn').classList.add('visible');
+    }
+    document.getElementById('heightUnitSeg').querySelectorAll('.seg-btn')
+      .forEach(b => b.classList.toggle('active', b.dataset.unit === heightUnit));
+
+    // Age / sex / active hours
+    document.getElementById('ageVal').value = p.age || '';
+    sex = p.sex || 'm';
+    document.getElementById('sexSeg').querySelectorAll('.seg-btn')
+      .forEach(b => b.classList.toggle('active', b.dataset.sex === sex));
+    document.getElementById('activeHrs').value = p.activityHrsPerWeek != null ? p.activityHrsPerWeek : '';
+
+    // WHOOP status
+    renderWhoopStatus();
+  }
+
+  // ===== Save =====
+  document.getElementById('settingsSave').addEventListener('click', () => {
+    const w = loadWater();
+    if (!w.profile) w.profile = {};
+
+    // Weight → always store in kg
+    const wRaw = parseFloat(document.getElementById('weightVal').value) || 0;
+    w.profile.weightKg = weightUnit === 'lb' ? wRaw / 2.20462 : wRaw;
+    w.weightUnit = weightUnit;
+
+    // Height → always store in cm
+    let hcm;
+    if (heightUnit === 'cm') {
+      hcm = parseFloat(document.getElementById('heightCm').value) || 0;
+    } else {
+      const ft = parseFloat(document.getElementById('heightFt').value) || 0;
+      const inch = parseFloat(document.getElementById('heightIn').value) || 0;
+      hcm = (ft * 12 + inch) * 2.54;
+    }
+    w.profile.heightCm = hcm;
+    w.profile.heightUnit = heightUnit;
+
+    w.profile.age = parseFloat(document.getElementById('ageVal').value) || 0;
+    w.profile.sex = sex;
+    w.profile.activityHrsPerWeek = parseFloat(document.getElementById('activeHrs').value) || 0;
+
+    // Preserve logs and everything else — never overwrite
+    localStorage.setItem(WATER_KEY, JSON.stringify(w));
+
+    const toast = document.getElementById('saveToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1800);
+  });
+
+  // ===== WHOOP =====
+  function fmtLastSync(ts) {
+    if (!ts) return '';
+    const diff = Math.floor((Date.now() - ts) / 60000);
+    if (diff < 1) return 'Last synced just now';
+    if (diff === 1) return 'Last synced 1 min ago';
+    if (diff < 60) return 'Last synced ' + diff + ' min ago';
+    const h = Math.floor(diff / 60);
+    return 'Last synced ' + h + (h === 1 ? ' hr' : ' hrs') + ' ago';
+  }
+
+  function renderWhoopStatus() {
+    const tokens = loadTokens();
+    const dot      = document.getElementById('whoopDot');
+    const statusTx = document.getElementById('whoopStatusText');
+    const syncMeta = document.getElementById('whoopSyncMeta');
+    const actionBtn= document.getElementById('whoopActionBtn');
+    const statsEl  = document.getElementById('whoopStats');
+
+    if (tokens && tokens.access) {
+      dot.classList.add('connected');
+      statusTx.textContent = 'WHOOP Connected';
+      syncMeta.textContent  = fmtLastSync(parseInt(localStorage.getItem(SYNC_KEY)) || 0);
+      actionBtn.textContent = 'Sync now';
+      actionBtn.onclick     = syncWhoop;
+      statsEl.style.display = '';
+    } else {
+      dot.classList.remove('connected');
+      statusTx.textContent  = 'Not connected';
+      syncMeta.textContent  = '';
+      actionBtn.textContent = 'Connect on Health page';
+      actionBtn.onclick     = () => { location.href = 'health.html'; };
+      statsEl.style.display = 'none';
+    }
+  }
+
+  async function refreshWhoopToken(t) {
+    if (!t || !t.refresh) return null;
+    try {
+      const r = await fetch('/api/whoop-refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: t.refresh })
+      });
+      const j = await r.json();
+      if (j.access_token) {
+        const next = { access: j.access_token, refresh: j.refresh_token || t.refresh, expires: Date.now() + (j.expires_in || 3500) * 1000 };
+        saveTokens(next);
+        return next;
+      }
+    } catch {}
+    return null;
+  }
+
+  async function whoopFetch(path, tokens) {
+    const [p, qs] = path.split('?');
+    const params = new URLSearchParams(qs || '');
+    params.set('path', p);
+    const r = await fetch('/api/whoop-data?' + params.toString(), {
+      headers: { 'Authorization': 'Bearer ' + tokens.access, 'Accept': 'application/json' }
+    });
+    if (r.status === 401) {
+      const n = await refreshWhoopToken(tokens);
+      if (n) return whoopFetch(path, n);
+      throw new Error('unauthorized');
+    }
+    if (!r.ok) throw new Error('WHOOP ' + r.status + ': ' + (await r.text()));
+    return r.json();
+  }
+
+  async function syncWhoop() {
+    let tokens = loadTokens();
+    if (!tokens || !tokens.access) return;
+    if (tokens.expires && Date.now() > tokens.expires - 60000) {
+      const n = await refreshWhoopToken(tokens);
+      if (n) tokens = n;
+    }
+    const btn = document.getElementById('whoopActionBtn');
+    const errEl = document.getElementById('whoopErr');
+    btn.classList.add('syncing'); btn.textContent = 'Syncing…';
+    errEl.style.display = 'none';
+    try {
+      const [rec, sleep] = await Promise.all([
+        whoopFetch('/recovery?limit=1', tokens).catch(() => null),
+        whoopFetch('/activity/sleep?limit=1', tokens).catch(() => null),
+      ]);
+      const r = rec && rec.records && rec.records[0] && rec.records[0].score;
+      if (r) {
+        document.getElementById('wsRecovery').textContent = Math.round(r.recovery_score || 0) + '%';
+        document.getElementById('wsRhr').textContent = Math.round(r.resting_heart_rate || 0);
+      }
+      const s = sleep && sleep.records && sleep.records[0];
+      if (s && s.score) {
+        document.getElementById('wsSleep').textContent = Math.round(s.score.sleep_performance_percentage || 0) + '%';
+      }
+      localStorage.setItem(SYNC_KEY, String(Date.now()));
+      document.getElementById('whoopSyncMeta').textContent = fmtLastSync(Date.now());
+    } catch (e) {
+      errEl.textContent = e.message || String(e);
+      errEl.style.display = '';
+    } finally {
+      btn.classList.remove('syncing'); btn.textContent = 'Sync now';
+    }
+  }
+
+  function autoSyncWhoop() {
+    const tokens = loadTokens();
+    if (!tokens || !tokens.access) return;
+    // Only auto-sync if last sync was > 5 minutes ago
+    const last = parseInt(localStorage.getItem(SYNC_KEY)) || 0;
+    if (Date.now() - last > 5 * 60 * 1000) syncWhoop();
+  }
+
+})();
+</script>
 </body>
 </html>
