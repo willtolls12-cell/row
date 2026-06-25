@@ -18,18 +18,15 @@
 const CONFIG = {
   appTitle: "Progressive Overload Coach",
 
-  // Weight unit shown everywhere. "kg" or "lb".
   units: "lb",
 
-  // Gyms you train at. Add as many as you want.
-  // `id` must be a short unique slug (no spaces). `name` is what people see.
+  // Bump this number to reseed exercises from defaultExercises on next load.
+  exerciseVersion: 2,
+
   gyms: [
-    { id: "home",  name: "Home Gym" },
-    { id: "comm",  name: "Commercial Gym" }
+    { id: "comm", name: "Commercial Gym" }
   ],
 
-  // Training split. Most people use Push/Pull/Legs but you can rename
-  // these to "Upper", "Lower", "Full Body", "Day A", anything.
   days: [
     { id: "pushA", name: "Push A" },
     { id: "pullA", name: "Pull A" },
@@ -39,72 +36,62 @@ const CONFIG = {
     { id: "legsB", name: "Legs B" }
   ],
 
-  // Split rotation — the order your training days cycle through. Use day
-  // ids from `days` above, plus "rest" for off-days. The pill at the top
-  // of the app reads this + splitAnchor to compute "what day is today".
   splitRotation: ["pushA", "pullA", "legsA", "rest", "pushB", "pullB", "legsB", "rest"],
 
-  // Anchor: pair a real calendar date with which split day fell on it.
-  // The rotation advances from this point. Set `date` to a recent day
-  // when you knew what split you were on, and `splitId` to that day.
-  // Edit this if your split drifts.
   splitAnchor: {
     date: "2026-06-03",
     splitId: "pushA"
   },
 
-  // Progression rule: hit this many reps on the top set → coach tells you
-  // to add weight next session. Lower this to be more aggressive (e.g. 6),
-  // raise it for more volume bias (e.g. 10).
   upgradeAtReps: 8,
 
-  // Composition estimate (optional, for the weight chart).
-  // Estimates how much of recent weight change is muscle vs fat by
-  // cross-referencing the strength trend. Set yearsTraining to scale
-  // expected muscle gain rate.
   composition: {
     enabled: true,
-    yearsTraining: 1,        // 1 = beginner, 2 = intermediate, 3+ = advanced
-    windowDays: 30           // window to compute weight + strength change
+    yearsTraining: 1,
+    windowDays: 30
   },
 
-  // Starter exercise list. Each one needs:
-  //   name        — what shows in the dropdown
-  //   gym         — one of the gym ids above, or "both"
-  //   day         — one of the day ids above
-  //   repMin      — bottom of your target rep range
-  //   repMax      — top of your target rep range
-  //   step        — how much weight you add when progressing (kg/lb)
-  //   startWeight — starting weight (ignored when bw: true)
-  //   bw          — true for bodyweight movements (logs reps only)
-  //
-  // First-run defaults. Once a user logs anything, they edit through
-  // the in-app + / gear buttons; this block stays as the seed.
   defaultExercises: [
     // Push A
-    { name: "Bench press",        gym: "comm", day: "pushA", repMin: 5, repMax: 8,  step: 2.5, startWeight: 135 },
-    { name: "Overhead press",     gym: "comm", day: "pushA", repMin: 5, repMax: 8,  step: 2.5, startWeight: 75 },
-    { name: "Tricep pushdown",    gym: "comm", day: "pushA", repMin: 8, repMax: 12, step: 2.5, startWeight: 50 },
+    { name: "Barbell bench press",       gym: "comm", day: "pushA", repMin: 5,  repMax: 6,  step: 2.5, startWeight: 135 },
+    { name: "Overhead press",            gym: "comm", day: "pushA", repMin: 6,  repMax: 8,  step: 2.5, startWeight: 95  },
+    { name: "Incline DB press",          gym: "comm", day: "pushA", repMin: 8,  repMax: 10, step: 2.5, startWeight: 60  },
+    { name: "Cable lateral raises",      gym: "comm", day: "pushA", repMin: 12, repMax: 15, step: 2.5, startWeight: 15  },
+    { name: "Close-grip bench / dips",   gym: "comm", day: "pushA", repMin: 8,  repMax: 10, step: 2.5, startWeight: 95  },
+    { name: "Overhead tricep extension", gym: "comm", day: "pushA", repMin: 10, repMax: 12, step: 2.5, startWeight: 40  },
+    { name: "Abs",                       gym: "comm", day: "pushA", repMin: 10, repMax: 20, step: 1,   startWeight: 0, bw: true },
     // Pull A
-    { name: "Pull-ups",           gym: "both", day: "pullA", repMin: 5, repMax: 10, step: 1,   startWeight: 0, bw: true },
-    { name: "Barbell row",        gym: "comm", day: "pullA", repMin: 6, repMax: 10, step: 2.5, startWeight: 115 },
-    { name: "Bicep curl",         gym: "comm", day: "pullA", repMin: 8, repMax: 12, step: 2.5, startWeight: 30 },
+    { name: "Trap bar deadlift",         gym: "comm", day: "pullA", repMin: 5,  repMax: 6,  step: 5,   startWeight: 185 },
+    { name: "Weighted pull-ups",         gym: "comm", day: "pullA", repMin: 6,  repMax: 8,  step: 2.5, startWeight: 0   },
+    { name: "Barbell row",               gym: "comm", day: "pullA", repMin: 8,  repMax: 10, step: 2.5, startWeight: 135 },
+    { name: "Reverse pec deck",          gym: "comm", day: "pullA", repMin: 15, repMax: 15, step: 2.5, startWeight: 50  },
+    { name: "Barbell / EZ-bar curl",     gym: "comm", day: "pullA", repMin: 8,  repMax: 10, step: 2.5, startWeight: 65  },
     // Legs A
-    { name: "Back squat",         gym: "comm", day: "legsA", repMin: 5, repMax: 8,  step: 5,   startWeight: 185 },
-    { name: "Romanian deadlift",  gym: "comm", day: "legsA", repMin: 6, repMax: 10, step: 5,   startWeight: 135 },
-    { name: "Leg press",          gym: "comm", day: "legsA", repMin: 8, repMax: 12, step: 10,  startWeight: 225 },
+    { name: "Leg press",                 gym: "comm", day: "legsA", repMin: 6,  repMax: 8,  step: 10,  startWeight: 270 },
+    { name: "Trap bar deadlift (mod)",   gym: "comm", day: "legsA", repMin: 6,  repMax: 8,  step: 5,   startWeight: 155 },
+    { name: "Leg extension",             gym: "comm", day: "legsA", repMin: 8,  repMax: 10, step: 5,   startWeight: 70  },
+    { name: "Hip abductor machine",      gym: "comm", day: "legsA", repMin: 10, repMax: 12, step: 5,   startWeight: 70  },
+    { name: "Standing calf raise",       gym: "comm", day: "legsA", repMin: 8,  repMax: 10, step: 5,   startWeight: 100 },
     // Push B
-    { name: "Incline bench press",gym: "comm", day: "pushB", repMin: 6, repMax: 10, step: 2.5, startWeight: 115 },
-    { name: "Dumbbell shoulder press", gym: "comm", day: "pushB", repMin: 8, repMax: 12, step: 2.5, startWeight: 35 },
-    { name: "Lateral raise",      gym: "comm", day: "pushB", repMin: 10, repMax: 15, step: 2.5, startWeight: 15 },
+    { name: "Incline barbell / DB press",gym: "comm", day: "pushB", repMin: 8,  repMax: 10, step: 2.5, startWeight: 115 },
+    { name: "DB shoulder press",         gym: "comm", day: "pushB", repMin: 10, repMax: 12, step: 2.5, startWeight: 40  },
+    { name: "Cable flyes / pec deck",    gym: "comm", day: "pushB", repMin: 12, repMax: 15, step: 2.5, startWeight: 30  },
+    { name: "DB lateral raises",         gym: "comm", day: "pushB", repMin: 15, repMax: 20, step: 2.5, startWeight: 15  },
+    { name: "Tricep pushdowns",          gym: "comm", day: "pushB", repMin: 12, repMax: 15, step: 2.5, startWeight: 50  },
+    { name: "Skull crushers / diamonds", gym: "comm", day: "pushB", repMin: 12, repMax: 15, step: 2.5, startWeight: 60  },
+    { name: "Abs",                       gym: "comm", day: "pushB", repMin: 10, repMax: 20, step: 1,   startWeight: 0, bw: true },
     // Pull B
-    { name: "Lat pulldown",       gym: "comm", day: "pullB", repMin: 6, repMax: 10, step: 2.5, startWeight: 100 },
-    { name: "Seated cable row",   gym: "comm", day: "pullB", repMin: 8, repMax: 12, step: 2.5, startWeight: 100 },
-    { name: "Hammer curl",        gym: "comm", day: "pullB", repMin: 8, repMax: 12, step: 2.5, startWeight: 30 },
+    { name: "Lat pulldown",              gym: "comm", day: "pullB", repMin: 10, repMax: 12, step: 2.5, startWeight: 110 },
+    { name: "Seated cable row",          gym: "comm", day: "pullB", repMin: 10, repMax: 12, step: 2.5, startWeight: 110 },
+    { name: "Single-arm DB row",         gym: "comm", day: "pullB", repMin: 10, repMax: 12, step: 2.5, startWeight: 60  },
+    { name: "Rear delt flyes",           gym: "comm", day: "pullB", repMin: 15, repMax: 20, step: 2.5, startWeight: 20  },
+    { name: "DB / cable curls",          gym: "comm", day: "pullB", repMin: 12, repMax: 15, step: 2.5, startWeight: 25  },
     // Legs B
-    { name: "Leg press",          gym: "comm", day: "legsB", repMin: 8, repMax: 12, step: 10,  startWeight: 225 },
-    { name: "Leg curl",           gym: "comm", day: "legsB", repMin: 8, repMax: 12, step: 5,   startWeight: 70 },
-    { name: "Calf raise",         gym: "comm", day: "legsB", repMin: 12, repMax: 15, step: 5,  startWeight: 100 }
+    { name: "Romanian deadlift",         gym: "comm", day: "legsB", repMin: 8,  repMax: 10, step: 5,   startWeight: 135 },
+    { name: "Seated leg curl",           gym: "comm", day: "legsB", repMin: 10, repMax: 12, step: 5,   startWeight: 70  },
+    { name: "Hip thrust / glute bridge", gym: "comm", day: "legsB", repMin: 10, repMax: 12, step: 10,  startWeight: 135 },
+    { name: "Hip abductor / adductor",   gym: "comm", day: "legsB", repMin: 12, repMax: 15, step: 5,   startWeight: 70  },
+    { name: "Seated calf raise",         gym: "comm", day: "legsB", repMin: 15, repMax: 20, step: 5,   startWeight: 70  },
   ]
 };
 </script>
@@ -1280,6 +1267,50 @@ img, video, canvas, svg { max-width: 100%; }
 }
 
 .hidden { display: none !important; }
+
+/* ----- Cardio logging ----- */
+.po-cardio-section {
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.po-cardio-inputs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;
+}
+.po-cardio-field { display: flex; flex-direction: column; gap: 4px; }
+.po-cardio-field label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-3);
+}
+.po-cardio-input {
+  padding: 10px 12px; border: 1px solid var(--border);
+  background: rgba(0,0,0,0.28); color: var(--text-1);
+  border-radius: 10px; font-family: inherit; font-size: 13px;
+  -webkit-appearance: none;
+}
+.po-cardio-input:focus { outline: none; border-color: rgba(255,255,255,0.40); }
+.po-cardio-input::placeholder { color: var(--text-3); }
+.po-cardio-full { grid-column: 1 / -1; }
+.po-cardio-save {
+  width: 100%; padding: 11px;
+  border: 1px solid var(--border); background: rgba(255,255,255,0.04);
+  color: var(--text-1); border-radius: 10px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.po-cardio-save:hover { background: rgba(255,255,255,0.08); }
+.po-cardio-logged {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(110,231,183,0.05); border: 1px solid rgba(110,231,183,0.15);
+  border-radius: 10px; font-size: 12px;
+}
+.po-cardio-logged-text { color: var(--good); font-weight: 600; }
+.po-cardio-edit {
+  background: transparent; border: none; color: var(--text-3);
+  font-family: inherit; font-size: 11px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; padding: 4px 6px;
+}
+.po-cardio-edit:hover { color: var(--bad); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1460,7 +1491,7 @@ img, video, canvas, svg { max-width: 100%; }
   <div class="card">
     <!-- Filters -->
     <div class="po-filters">
-      <div class="po-seg-row">
+      <div class="po-seg-row" id="gymSegRow">
         <span class="po-seg-label">Gym</span>
         <div class="po-seg-control" id="gymSeg"></div>
       </div>
@@ -1591,6 +1622,29 @@ img, video, canvas, svg { max-width: 100%; }
         </div>
         <ul class="po-tw-list" id="poTwList"></ul>
         <div class="po-tw-empty" id="poTwEmpty">No sets logged today — log one above and it'll appear here.</div>
+
+        <!-- Cardio for today -->
+        <div class="po-cardio-section">
+          <div class="po-sub-title" style="margin-bottom:10px;">Cardio</div>
+          <div id="poCardioLogged" style="display:none"></div>
+          <div id="poCardioForm">
+            <div class="po-cardio-inputs">
+              <div class="po-cardio-field">
+                <label>Type</label>
+                <input type="text" class="po-cardio-input" id="poCardioType" placeholder="e.g. Treadmill">
+              </div>
+              <div class="po-cardio-field">
+                <label>Duration</label>
+                <input type="text" class="po-cardio-input" id="poCardioDuration" placeholder="e.g. 20 min">
+              </div>
+              <div class="po-cardio-field po-cardio-full">
+                <label>Notes</label>
+                <input type="text" class="po-cardio-input" id="poCardioNotes" placeholder="e.g. Zone 2, incline 4, pace 3.5">
+              </div>
+            </div>
+            <button class="po-cardio-save" id="poCardioSave">Save cardio</button>
+          </div>
+        </div>
       </div>
 
       <button type="button" class="po-tw-past-toggle" id="poTwPastToggle" aria-expanded="false">
@@ -1732,7 +1786,19 @@ img, video, canvas, svg { max-width: 100%; }
     s.units = s.units || CONFIG.units || 'kg';
     s.gyms  = (Array.isArray(s.gyms)  && s.gyms.length)  ? s.gyms  : CONFIG.gyms.slice();
     s.days  = (Array.isArray(s.days)  && s.days.length)  ? s.days  : CONFIG.days.slice();
-    s.exercises = Array.isArray(s.exercises) ? s.exercises : buildDefaultExercises();
+    // Migrate: remove legacy home gym, reassign its exercises to comm
+    if (Array.isArray(s.gyms) && s.gyms.find(g => g.id === 'home')) {
+      s.gyms = s.gyms.filter(g => g.id !== 'home');
+      if (!s.gyms.length) s.gyms = CONFIG.gyms.slice();
+      if (Array.isArray(s.exercises)) s.exercises.forEach(e => { if (e.gym === 'home') e.gym = 'comm'; });
+      if (!s.gyms.find(g => g.id === s.filterGym)) s.filterGym = s.gyms[0].id;
+    }
+    // Reseed exercises when exerciseVersion bumps (new program)
+    const _exVer = CONFIG.exerciseVersion || 1;
+    if (!Array.isArray(s.exercises) || (s.exVersion || 0) < _exVer) {
+      s.exercises = buildDefaultExercises();
+      s.exVersion = _exVer;
+    }
     s.logs = (s.logs && typeof s.logs === 'object') ? s.logs : {};
     s.filterGym = s.filterGym || s.gyms[0].id;
     s.filterDay = s.filterDay || s.days[0].id;
@@ -1824,6 +1890,7 @@ img, video, canvas, svg { max-width: 100%; }
   // RENDER
   // ============================================================
   function renderFilters() {
+    $('gymSegRow').style.display = state.gyms.length <= 1 ? 'none' : '';
     $('gymSeg').innerHTML = state.gyms.map(g =>
       '<button class="po-seg-btn ' + (g.id === state.filterGym ? 'active' : '') + '" data-gym="' + g.id + '">' + escape(g.name) + '</button>'
     ).join('');
@@ -2082,6 +2149,7 @@ img, video, canvas, svg { max-width: 100%; }
     renderRx(); renderStats(); renderSparkline(); renderHistory();
     renderTodaysWorkout();
     renderPastWorkouts();
+    renderCardio();
     // Pre-fill weight input with last logged weight (or starting weight)
     const ex = getCurrentEx();
     if (ex && !ex.bw) {
@@ -2212,6 +2280,13 @@ img, video, canvas, svg { max-width: 100%; }
       const isDone = !!doneDays[dk];
       const exNames = sum.perEx.map(e => e.ex.name).slice(0, 3).join(', ')
         + (sum.perEx.length > 3 ? '…' : '');
+      const cardio = cardioData[dk];
+      const cardioLine = cardio && (cardio.type || cardio.duration)
+        ? '<div style="margin-top:4px;font-size:11px;color:var(--good);">🏃 '
+            + escape([cardio.type, cardio.duration].filter(Boolean).join(' · '))
+            + (cardio.notes ? ' — ' + escape(cardio.notes) : '')
+            + '</div>'
+        : '';
       return '<div class="po-tw-past-day">'
         + '<div class="po-tw-past-day-h">'
         +   '<span class="po-tw-past-day-date">' + fmtPastDate(dk) + '</span>'
@@ -2223,9 +2298,59 @@ img, video, canvas, svg { max-width: 100%; }
         + '<div class="po-tw-past-day-summary" style="margin-top:6px; font-size:11px; color:var(--text-3);">'
         +   escape(exNames)
         + '</div>'
+        + cardioLine
         + '</div>';
     }).join('');
   }
+
+  // ============================================================
+  // CARDIO LOGGING
+  // Stored as po_coach_cardio: { "YYYY-MM-DD": { type, duration, notes } }
+  // ============================================================
+  const CARDIO_KEY = 'po_coach_cardio';
+  function loadCardio() {
+    try { const r = localStorage.getItem(CARDIO_KEY); return r ? JSON.parse(r) : {}; } catch (e) { return {}; }
+  }
+  function saveCardioData(d) { try { localStorage.setItem(CARDIO_KEY, JSON.stringify(d)); } catch (e) {} }
+  let cardioData = loadCardio();
+
+  function renderCardio() {
+    const todayKey = wtDateKey(new Date());
+    const entry = cardioData[todayKey];
+    const logged = $('poCardioLogged');
+    const form = $('poCardioForm');
+    if (entry && (entry.type || entry.duration)) {
+      form.style.display = 'none';
+      logged.style.display = 'block';
+      const parts = [entry.type, entry.duration].filter(Boolean).join(' · ');
+      const note = entry.notes ? ' — ' + escape(entry.notes) : '';
+      logged.innerHTML = '<div class="po-cardio-logged">'
+        + '<span class="po-cardio-logged-text">🏃 ' + escape(parts) + note + '</span>'
+        + '<button class="po-cardio-edit" id="poCardioEdit">Edit</button>'
+        + '</div>';
+      $('poCardioEdit').addEventListener('click', () => {
+        $('poCardioType').value = entry.type || '';
+        $('poCardioDuration').value = entry.duration || '';
+        $('poCardioNotes').value = entry.notes || '';
+        logged.style.display = 'none';
+        form.style.display = 'block';
+      });
+    } else {
+      logged.style.display = 'none';
+      form.style.display = 'block';
+    }
+  }
+
+  $('poCardioSave').addEventListener('click', () => {
+    const type = ($('poCardioType').value || '').trim();
+    const duration = ($('poCardioDuration').value || '').trim();
+    const notes = ($('poCardioNotes').value || '').trim();
+    if (!type && !duration) return;
+    const todayKey = wtDateKey(new Date());
+    cardioData[todayKey] = { type, duration, notes };
+    saveCardioData(cardioData);
+    renderCardio();
+  });
 
   $('poTwDoneBtn').addEventListener('click', () => {
     const todayKey = wtDateKey(new Date());
