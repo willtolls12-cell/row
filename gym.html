@@ -2258,8 +2258,8 @@ img, video, canvas, svg { max-width: 100%; }
     const isDone = !!doneDays[todayKey];
     btn.textContent = isDone ? '✓ Done' : 'Mark workout done';
     btn.classList.toggle('is-done', isDone);
-    btn.disabled = sum.totalSets === 0 && !isDone;
-    btn.style.opacity = btn.disabled ? '0.4' : '';
+    btn.disabled = false;
+    btn.style.opacity = '';
   }
 
   function renderPastWorkouts() {
