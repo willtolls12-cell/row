@@ -1771,7 +1771,7 @@ img, video, canvas, svg { max-width: 100%; }
 
   function buildDefaultExercises() {
     return CONFIG.defaultExercises.map((e, i) => Object.assign({
-      id: 'seed_' + i + '_' + Date.now()
+      id: 'seed_v' + (CONFIG.exerciseVersion || 1) + '_' + i
     }, e));
   }
   function loadState() {
@@ -1832,6 +1832,9 @@ img, video, canvas, svg { max-width: 100%; }
     try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
   }
   let state = loadState();
+  // Persist normalized state immediately so Supabase sync can't race
+  // and overwrite an older exVersion back over our fresh seed.
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
   document.getElementById('appTitle').textContent = CONFIG.appTitle || 'Progressive Overload Coach';
 
   // ============================================================
@@ -3539,7 +3542,17 @@ img, video, canvas, svg { max-width: 100%; }
         if (k in remote) {
           const incoming = JSON.stringify(remote[k]);
           const local = localStorage.getItem(k);
-          if (local !== incoming) { try { _pcOrigSet(k, incoming); changed = true; } catch {} }
+          if (local !== incoming) {
+            // Don't let a remote state with an older exerciseVersion overwrite
+            // a local state that has already been migrated to a newer version.
+            if (k === 'po_coach_v1') {
+              let localExVer = 0, remoteExVer = 0;
+              try { localExVer = (JSON.parse(local) || {}).exVersion || 0; } catch {}
+              try { remoteExVer = (remote[k] || {}).exVersion || 0; } catch {}
+              if (localExVer > remoteExVer) continue;
+            }
+            try { _pcOrigSet(k, incoming); changed = true; } catch {}
+          }
         } else if (localStorage.getItem(k) != null) {
           try { _pcOrigRemove(k); changed = true; } catch {}
         }
